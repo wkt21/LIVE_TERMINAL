@@ -20,6 +20,283 @@ An interactive Three.js visualization that renders a rotating globe with animate
 3. The status bar shows recording progress
 4. Once complete, the GIF downloads automatically as `globe-webs-8s.gif`
 5. Click **"Regenerate webs"** to create a new random web pattern without recording
+6. ---
+7. <!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Cyber Map → 5s GIF Export (embedded image)</title>
+<style>
+  body{margin:0;background:#000;color:#0ff;font-family:system-ui,Segoe UI,Roboto,Arial}
+  #controls{position:fixed;left:12px;top:12px;z-index:10;background:rgba(0,0,0,0.6);padding:10px;border-radius:6px;border:1px solid rgba(0,255,200,0.08)}
+  button{margin-right:8px;padding:8px 12px;background:#013;color:#0ff;border:1px solid #06f;border-radius:4px;cursor:pointer}
+  #status{display:inline-block;margin-left:8px;color:#afa}
+  canvas{display:block;margin:0 auto;box-shadow:0 0 30px rgba(0,255,200,0.03)}
+  #previewWrapper{position:fixed;right:12px;top:12px;z-index:10;max-width:360px;max-height:80vh;overflow:auto;background:rgba(0,0,0,0.45);padding:10px;border-radius:6px;border:1px solid rgba(0,255,200,0.06)}
+  #previewWrapper img{width:100%;display:block;margin-bottom:8px}
+  #previewWrapper textarea{width:100%;height:120px;background:#000;color:#0ff;border:1px solid rgba(0,255,200,0.06);padding:6px}
+</style>
+</head>
+<body>
+  <div id="controls">
+    <button id="startBtn">Start (auto-record 5s)</button>
+    <button id="regenBtn">Regenerate webs</button>
+    <span id="status">Ready</span>
+  </div>
+
+  <div id="previewWrapper" style="display:none">
+    <strong style="color:#0ff">GIF Preview & Base64</strong>
+    <div id="previewArea"></div>
+    <textarea id="gifBase64" readonly></textarea>
+  </div>
+
+  <canvas id="c" width="1365" height="768"></canvas>
+
+  <!-- gif.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+
+  <script>
+  // REPLACE the value below with your image data URI (data:image/png;base64,....)
+  const MAP_DATA_URI = "data:image/png;base64,PASTE_YOUR_BASE64_HERE";
+
+  // Config
+  const DURATION = 5.0;        // seconds (changed to 5s)
+  const FPS = 24;              // frames per second
+  const FRAMES = Math.round(DURATION * FPS);
+  const WIDTH = 1365;
+  const HEIGHT = 768;
+  const NUM_WEBS = 12;         // number of arcs
+
+  // Canvas & ctx
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+
+  const statusEl = document.getElementById('status');
+  const startBtn = document.getElementById('startBtn');
+  const regenBtn = document.getElementById('regenBtn');
+
+  const previewWrapper = document.getElementById('previewWrapper');
+  const previewArea = document.getElementById('previewArea');
+  const gifBase64TA = document.getElementById('gifBase64');
+
+  // Load embedded map
+  const mapImg = new Image();
+  mapImg.src = MAP_DATA_URI;
+  mapImg.onload = () => {
+    drawFrame(0); // initial preview
+    statusEl.textContent = 'Map loaded';
+  };
+  mapImg.onerror = () => statusEl.textContent = 'Failed to load embedded image — check MAP_DATA_URI';
+
+  // Web data
+  let webs = [];
+
+  function rand(min, max){ return Math.random() * (max - min) + min; }
+  function pickPointEdgeBias() { return { x: rand(80, WIDTH - 80), y: rand(60, HEIGHT - 60) }; }
+  function makeWeb() {
+    const a = pickPointEdgeBias();
+    const b = pickPointEdgeBias();
+    const hue = Math.floor(rand(160, 300)); // cyan->magenta palettes
+    const color = `hsl(${hue} 100% 60%)`;
+    return { from: a, to: b, color, width: rand(2, 5), phase: Math.random(), speed: rand(0.8, 1.6) };
+  }
+
+  function regenerate() {
+    webs = [];
+    for (let i=0;i<NUM_WEBS;i++) webs.push(makeWeb());
+    statusEl.textContent = 'Webs regenerated';
+    drawFrame(0);
+  }
+  regenBtn.onclick = () => regenerate();
+
+  function cubicPoint(p0,p1,p2,p3,t){
+    const u = 1 - t;
+    const tt = t*t, uu = u*u;
+    const uuu = uu * u, ttt = tt * t;
+    const x = uuu*p0.x + 3*uu*t*p1.x + 3*u*tt*p2.x + ttt*p3.x;
+    const y = uuu*p0.y + 3*uu*t*p1.y + 3*u*tt*p2.y + ttt*p3.y;
+    return {x,y};
+  }
+
+  function drawGlowArc(pathPoints, lineWidth, color, alpha=1.0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i=3;i>=0;i--){
+      ctx.beginPath();
+      ctx.lineWidth = lineWidth * (1 + i*1.6);
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = alpha * (0.12 + 0.22*(i/3));
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10 + i*10;
+      ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+      for (let k=1;k<pathPoints.length;k++) ctx.lineTo(pathPoints[k].x, pathPoints[k].y);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = '#fff';
+    ctx.globalAlpha = alpha*0.12;
+    for (let k=0;k<pathPoints.length;k++){
+      if (k===0) ctx.moveTo(pathPoints[k].x, pathPoints[k].y);
+      else ctx.lineTo(pathPoints[k].x, pathPoints[k].y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFrame(progress) {
+    ctx.clearRect(0,0,WIDTH,HEIGHT);
+    ctx.drawImage(mapImg, 0, 0, WIDTH, HEIGHT);
+    ctx.fillStyle = 'rgba(0,8,10,0.45)';
+    ctx.fillRect(0,0,WIDTH,HEIGHT);
+
+    webs.forEach((w, idx) => {
+      const dx = (w.to.x - w.from.x);
+      const dy = (w.to.y - w.from.y);
+      const dist = Math.hypot(dx,dy) || 1;
+      const cx = (w.from.x + w.to.x)/2 + (-dy/dist)*rand(-0.25, 0.25)*dist;
+      const cy = (w.from.y + w.to.y)/2 + (dx/dist)*rand(-0.25, 0.25)*dist;
+      const p0 = w.from;
+      const p1 = { x: (w.from.x + cx)/2, y: (w.from.y + cy)/2 };
+      const p2 = { x: (cx + w.to.x)/2, y: (cy + w.to.y)/2 };
+      const p3 = w.to;
+
+      const samples = 80;
+      const pathPts = [];
+      for(let s=0;s<=samples;s++){
+        const t = s / samples;
+        pathPts.push(cubicPoint(p0,p1,p2,p3,t));
+      }
+
+      drawGlowArc(pathPts, w.width, w.color, 0.9);
+
+      const localPos = ((progress * w.speed) + w.phase) % 1.0;
+      const particleCount = 2 + Math.floor(w.width/2);
+      for (let p=0;p<particleCount;p++){
+        const t = (localPos + (p/particleCount)*0.08) % 1;
+        const pt = cubicPoint(p0,p1,p2,p3, t);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = w.color;
+        ctx.beginPath();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = w.color;
+        ctx.globalAlpha = 0.95;
+        ctx.arc(pt.x, pt.y, 2.5 + Math.abs(Math.sin((progress + p*0.4)*Math.PI))*2.5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      const pulse = 0.5 + 0.5 * Math.sin(2*Math.PI*(progress*2 + idx*0.17));
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = w.color;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = w.color;
+      ctx.arc(w.to.x, w.to.y, 6 + pulse*10, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = 0.92;
+      ctx.beginPath();
+      ctx.arc(w.to.x, w.to.y, 2.4, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#0ff';
+    ctx.fillRect(12, 12, WIDTH-24, 1.2);
+    ctx.restore();
+  }
+
+  // Recording via gif.js
+  function recordGIF() {
+    startBtn.disabled = true;
+    regenBtn.disabled = true;
+    statusEl.textContent = 'Preparing GIF...';
+
+    const gif = new GIF({
+      workers: 2,
+      workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
+      quality: 10,
+      width: WIDTH,
+      height: HEIGHT,
+      transparent: null,
+      repeat: 0,
+      background: '#000'
+    });
+
+    let i = 0;
+    function addNext() {
+      if (i >= FRAMES) {
+        statusEl.textContent = 'Rendering GIF (this may take a moment)...';
+        gif.render();
+        return;
+      }
+      const progress = i / (FRAMES - 1);
+      drawFrame(progress);
+      statusEl.textContent = `Recording frame ${i+1}/${FRAMES} (${Math.round(100*(i+1)/FRAMES)}%)`;
+      gif.addFrame(canvas, {copy: true, delay: 1000 / FPS});
+      i++;
+      // yield occasionally to keep UI responsive
+      if (i % 24 === 0) setTimeout(addNext, 6);
+      else addNext();
+    }
+
+    gif.on('finished', function(blob) {
+      // Convert blob to base64 data URL and show preview + textarea
+      const reader = new FileReader();
+      reader.onload = function() {
+        const dataUrl = reader.result; // data:image/gif;base64,...
+        // show preview
+        previewArea.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        previewArea.appendChild(img);
+        // show full data URL in textarea for copy
+        gifBase64TA.value = dataUrl;
+        previewWrapper.style.display = 'block';
+        // also trigger a download (optional)
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'cyber-map-5s.gif';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        statusEl.textContent = 'Done — GIF ready (preview + base64 shown)';
+        startBtn.disabled = false;
+        regenBtn.disabled = false;
+      };
+      reader.readAsDataURL(blob);
+    });
+
+    addNext();
+  }
+
+  startBtn.onclick = async () => {
+    regenerate();
+    await new Promise(r => setTimeout(r, 120));
+    statusEl.textContent = 'Recording starting...';
+    recordGIF();
+  };
+  regenBtn.onclick = regenerate;
+
+  // initial
+  regenerate();
+  </script>
+</body>
+</html>
 
 ## Technical Details
 
