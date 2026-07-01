@@ -1,111 +1,288 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1365" height="768" viewBox="0 0 1365 768" preserveAspectRatio="xMidYMid meet">
   <defs>
+    <!-- Background gradients -->
     <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#000004" />
       <stop offset="100%" stop-color="#001218" />
     </linearGradient>
 
-    <linearGradient id="landGrad" x1="0" y1="0" x2="1" y2="1">
+    <!-- Neon land gradient -->
+    <linearGradient id="neonLand" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#00ffd8" stop-opacity="1"/>
       <stop offset="60%" stop-color="#00b3ff" stop-opacity="0.95"/>
       <stop offset="100%" stop-color="#00ff88" stop-opacity="0.9"/>
     </linearGradient>
 
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="10" result="blur" />
+    <!-- Glow filters for neon effect -->
+    <filter id="glowBig" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="14" result="blur1" />
       <feMerge>
-        <feMergeNode in="blur" />
+        <feMergeNode in="blur1" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
 
+    <filter id="glowSmall" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Soft overlay for highlights -->
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="4" result="b" />
+      <feGaussianBlur stdDeviation="3" result="b" />
       <feBlend in="SourceGraphic" in2="b" mode="screen" />
     </filter>
 
+    <!-- Dot pattern for city lights -->
+    <g id="dotLight">
+      <circle cx="0" cy="0" r="1.6" fill="#fff" />
+      <circle cx="0" cy="0" r="4.5" fill="#00ffd8" opacity="0.08" />
+    </g>
+
+    <!-- Small star/dot used for scattered lights -->
+    <symbol id="star" viewBox="-2 -2 4 4">
+      <circle cx="0" cy="0" r="1" fill="#ffd87a" opacity="0.95" />
+    </symbol>
+
+    <!-- Arc path style -->
+    <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff3b3b" />
+      <stop offset="50%" stop-color="#ffcc00" />
+      <stop offset="100%" stop-color="#35ff9a" />
+    </linearGradient>
+
+    <!-- small moving pulse for impacts -->
+    <radialGradient id="impact" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="30%" stop-color="#ff6bff" stop-opacity="0.8"/>
+      <stop offset="70%" stop-color="#6bffea" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- grid subtle -->
     <pattern id="grid" patternUnits="userSpaceOnUse" width="60" height="60">
       <path d="M60 0 L0 0 0 60" fill="none" stroke="#002227" stroke-width="0.5" />
     </pattern>
 
-    <g id="cityLights">
-      <circle cx="0" cy="0" r="1.8" fill="#fff" />
-      <circle cx="0" cy="0" r="4.6" fill="#00ffd8" opacity="0.06" />
-    </g>
+    <!-- stroke used for neon coastlines -->
+    <style>
+      .coastline { fill: none; stroke: #00ffd8; stroke-opacity:0.95; stroke-width:1.6; mix-blend-mode:screen }
+      .coastline-outer { fill: none; stroke: #00b3ff; stroke-opacity:0.18; stroke-width:6; filter: url(#glowBig) }
+      .land-fill { fill: url(#neonLand); opacity:0.03 }
+      .lights { filter: url(#glowSmall); }
+      .arc { fill: none; stroke: url(#arcGrad); stroke-width:2.6; stroke-linecap:round; opacity:0.95; filter: url(#glowSmall) }
+      .impact { fill: url(#impact); opacity:0.95; filter: url(#glowSmall) }
+      .panel { fill: rgba(0,26,26,0.55); stroke: rgba(3,150,140,0.26); stroke-width:1; filter: url(#soft) }
+      .label { font-family: "Segoe UI", system-ui, Arial; fill: #00f7d9 }
+    </style>
   </defs>
 
-  <!-- Background -->
+  <!-- Background layers -->
   <rect width="100%" height="100%" fill="url(#bgGrad)" />
-  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.06" />
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.045" />
 
-  <!-- Soft vignette -->
+  <!-- vignette -->
   <radialGradient id="vign" cx="50%" cy="35%" r="70%">
     <stop offset="0%" stop-color="#000" stop-opacity="0"/>
     <stop offset="100%" stop-color="#000" stop-opacity="0.6"/>
   </radialGradient>
   <rect width="100%" height="100%" fill="url(#vign)" />
 
-  <!-- Stylized continents (abstract shapes for neon cyber look) -->
-  <g transform="translate(0,0)" filter="url(#glow)" opacity="0.98">
-    <path d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 180 420, 120 360 Z"
-          fill="url(#landGrad)" opacity="0.94" />
+  <!-- Neon continents: simplified stylized outlines for a cyber look -->
+  <g id="continents">
+    <!-- outer soft glow to give depth -->
+    <path class="coastline-outer" d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 220 360, 160 300 C100 250, 80 230, 120 220 Z" />
 
-    <path d="M60 520 C120 460, 200 440, 300 470 C420 510, 520 600, 640 620 C780 645, 920 620, 1040 560 C1160 500, 1250 420, 1300 360 C1330 320, 1280 260, 1240 240 C1180 210, 1060 200, 940 210 C820 220, 690 240, 560 240 C420 240, 320 280, 240 320 C160 360, 120 480, 60 520 Z"
-          fill="url(#landGrad)" opacity="0.85" transform="translate(0,10)" />
+    <!-- main coastline stroke -->
+    <path class="coastline" d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 220 360, 160 300 C100 250, 80 230, 120 220 Z" />
 
-    <!-- Smaller islands / clusters -->
-    <ellipse cx="980" cy="120" rx="65" ry="28" fill="url(#landGrad)" opacity="0.9" />
-    <ellipse cx="220" cy="100" rx="42" ry="18" fill="url(#landGrad)" opacity="0.88" />
-    <ellipse cx="1180" cy="420" rx="28" ry="12" fill="url(#landGrad)" opacity="0.9" />
+    <!-- subtle land fill for body -->
+    <path class="land-fill" d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 220 360, 160 300 C100 250, 80 230, 120 220 Z" />
+
+    <!-- smaller island clusters -->
+    <ellipse cx="980" cy="120" rx="65" ry="28" class="land-fill" opacity="0.06" />
+    <ellipse cx="220" cy="100" rx="42" ry="18" class="land-fill" opacity="0.055" />
+    <ellipse cx="1180" cy="420" rx="28" ry="12" class="land-fill" opacity="0.06" />
   </g>
 
-  <!-- Overlay soft stroke for depth -->
-  <g opacity="0.18" filter="url(#soft)">
-    <path d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 180 420, 120 360 Z"
-          fill="none" stroke="#00ffcc" stroke-width="1.4" />
-  </g>
-
-  <!-- City lights (randomized clusters placed to suggest density) -->
-  <g id="lights" opacity="0.98">
+  <!-- City lights clusters (more dense + color variance) -->
+  <g id="lights" class="lights" opacity="0.95">
     <!-- Europe-like cluster -->
-    <use href="#cityLights" x="820" y="230" />
-    <use href="#cityLights" x="840" y="250" />
-    <use href="#cityLights" x="860" y="230" />
-    <use href="#cityLights" x="900" y="260" />
-    <use href="#cityLights" x="920" y="240" />
+    <use href="#dotLight" x="820" y="230" />
+    <use href="#dotLight" x="840" y="250" />
+    <use href="#dotLight" x="860" y="230" />
+    <use href="#dotLight" x="900" y="260" />
+    <use href="#dotLight" x="920" y="240" />
+    <use href="#star" x="860" y="210" />
 
-    <!-- East cluster -->
-    <use href="#cityLights" x="1150" y="300" />
-    <use href="#cityLights" x="1180" y="320" />
-    <use href="#cityLights" x="1100" y="280" />
+    <!-- East Asia cluster -->
+    <use href="#dotLight" x="1150" y="300" />
+    <use href="#dotLight" x="1180" y="320" />
+    <use href="#dotLight" x="1100" y="280" />
+    <use href="#dotLight" x="1128" y="290" />
 
-    <!-- Americas-like cluster -->
-    <use href="#cityLights" x="320" y="300" />
-    <use href="#cityLights" x="360" y="320" />
-    <use href="#cityLights" x="300" y="340" />
-    <use href="#cityLights" x="260" y="300" />
+    <!-- Americas cluster -->
+    <use href="#dotLight" x="320" y="300" />
+    <use href="#dotLight" x="360" y="320" />
+    <use href="#dotLight" x="300" y="340" />
+    <use href="#dotLight" x="260" y="300" />
+    <use href="#star" x="340" y="280" />
+
+    <!-- South Africa-ish -->
+    <use href="#dotLight" x="700" y="520" />
+    <use href="#dotLight" x="720" y="540" />
 
     <!-- Oceania-ish -->
-    <use href="#cityLights" x="1040" y="120" />
-    <use href="#cityLights" x="1080" y="140" />
+    <use href="#dotLight" x="1040" y="120" />
+    <use href="#dotLight" x="1080" y="140" />
+    <use href="#star" x="1065" y="130" />
+
+    <!-- scattered faint lights across map -->
+    <use href="#dotLight" x="980" y="200" opacity="0.25" />
+    <use href="#dotLight" x="640" y="360" opacity="0.22" />
+    <use href="#dotLight" x="480" y="240" opacity="0.18" />
   </g>
 
-  <!-- Subtle scanline overlay -->
-  <rect width="100%" height="100%" fill="none" />
-  <g opacity="0.03" fill="#00ffee">
-    <rect x="0" y="0" width="1365" height="2" />
-    <rect x="0" y="6" width="1365" height="1.2" />
-    <rect x="0" y="12" width="1365" height="1" />
+  <!-- Neon attack arcs (animated stroke-dashoffset for motion) -->
+  <g id="arcs">
+    <!-- sample arc from east asia to usa -->
+    <path id="arc1" class="arc" d="M1150 300 C980 220, 560 200, 350 300" stroke-width="3">
+      <animate attributeName="stroke-dasharray" values="0,1800;360,1440;720,1080;1080,720;1440,360;1800,0" dur="7s" repeatCount="indefinite" />
+    </path>
+
+    <!-- arc from europe to usa -->
+    <path id="arc2" class="arc" d="M840 240 C720 210, 560 230, 360 300" stroke-width="2.6">
+      <animate attributeName="stroke-dashoffset" values="0;-1800" dur="6.2s" repeatCount="indefinite" />
+    </path>
+
+    <!-- arc from africa to east asia -->
+    <path id="arc3" class="arc" d="M760 520 C880 420, 980 360, 1120 310" stroke-width="2.6" opacity="0.9">
+      <animate attributeName="stroke-dashoffset" values="0;-1200" dur="8s" repeatCount="indefinite" />
+    </path>
+
+    <!-- moving pulses along arcs (small circles animated along path) -->
+    <g fill="#fff" opacity="0.95">
+      <circle r="4" fill="#ff3b3b">
+        <animateMotion dur="7s" repeatCount="indefinite">
+          <mpath xlink:href="#arc1" />
+        </animateMotion>
+      </circle>
+      <circle r="3.2" fill="#35ff9a">
+        <animateMotion dur="6.2s" repeatCount="indefinite">
+          <mpath xlink:href="#arc2" />
+        </animateMotion>
+      </circle>
+      <circle r="3.6" fill="#ffd100">
+        <animateMotion dur="8s" repeatCount="indefinite">
+          <mpath xlink:href="#arc3" />
+        </animateMotion>
+      </circle>
+    </g>
   </g>
 
-  <!-- Corner glow accent -->
-  <ellipse cx="120" cy="648" rx="340" ry="160" fill="#00ffd8" opacity="0.02" />
+  <!-- Impact pulses at targets -->
+  <g id="impacts">
+    <g transform="translate(350,300)">
+      <circle class="impact" r="6">
+        <animate attributeName="r" values="6;18;28" dur="1.4s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.95;0.25;0" dur="1.4s" repeatCount="indefinite" />
+      </circle>
+      <circle r="3" fill="#35ff9a" filter="url(#glowSmall)"></circle>
+    </g>
 
-  <!-- Small legend label -->
-  <g transform="translate(20,730)" opacity="0.9">
-    <rect x="-6" y="-18" width="220" height="28" rx="6" fill="#001a1a" opacity="0.6" />
-    <text x="0" y="0" fill="#00f7d9" font-family="Segoe UI, system-ui, Arial" font-size="14">Neon Cyber Map · map.svg</text>
+    <g transform="translate(1150,300)">
+      <circle class="impact" r="6">
+        <animate attributeName="r" values="6;22;36" dur="1.6s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.95;0.22;0" dur="1.6s" repeatCount="indefinite" />
+      </circle>
+      <circle r="4" fill="#ff3b3b" filter="url(#glowSmall)"></circle>
+    </g>
+
+    <g transform="translate(840,240)">
+      <circle class="impact" r="5">
+        <animate attributeName="r" values="5;18;30" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.9;0.25;0" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+      <circle r="3.4" fill="#35ff9a" filter="url(#glowSmall)"></circle>
+    </g>
+  </g>
+
+  <!-- Left info panel (attack origins) -->
+  <g transform="translate(20,120)">
+    <rect x="0" y="0" width="270" height="320" rx="8" class="panel" />
+    <text x="18" y="28" class="label" font-size="18" font-weight="700">LIVE CYBER THREAT MAP</text>
+    <text x="18" y="50" font-size="12" fill="#8af7d8">GLOBAL VIEW · REAL-TIME ATTACK MONITOR</text>
+
+    <!-- sample list lines -->
+    <g transform="translate(18,84)" fill="#a8fff0" font-size="13">
+      <text x="0" y="0">ATTACK ORIGINS</text>
+      <text x="0" y="28">1. China ··· 3,261</text>
+      <text x="0" y="48">2. United States ··· 2,190</text>
+      <text x="0" y="68">3. Russia ··· 1,856</text>
+      <text x="0" y="88">4. Spain ··· 985</text>
+      <text x="0" y="108">5. Sweden ··· 642</text>
+    </g>
+  </g>
+
+  <!-- Right top time & stats -->
+  <g transform="translate(1040,18)" opacity="0.95">
+    <text x="0" y="12" fill="#35ff9a" font-size="12">2026-07-01 13:37:42 UTC</text>
+    <text x="0" y="30" fill="#8af7d8" font-size="11">THREATS DETECTED: <tspan fill="#ffd100">12,842</tspan></text>
+  </g>
+
+  <!-- Bottom panels row -->
+  <g transform="translate(12,560)">
+    <rect x="0" y="0" width="1341" height="196" rx="10" class="panel" />
+
+    <!-- Leftmost: Attack types -->
+    <g transform="translate(18,18)">
+      <text class="label" x="0" y="20" font-size="16">ATTACK TYPES</text>
+      <rect x="0" y="28" width="250" height="130" rx="6" fill="rgba(0,0,0,0)" stroke="#003333" stroke-opacity="0.12" />
+      <!-- sample bars -->
+      <g transform="translate(8,44)" fill="#9ffff0" font-size="12">
+        <text x="0" y="0">1. SQL Injection</text>
+        <rect x="0" y="6" width="120" height="10" rx="3" fill="#00ff9a" opacity="0.9" />
+        <text x="0" y="36">2. DDoS</text>
+        <rect x="0" y="42" width="90" height="10" rx="3" fill="#00a3ff" opacity="0.9" />
+      </g>
+    </g>
+
+    <!-- Center: Live attacks table (stylized) -->
+    <g transform="translate(300,18)">
+      <text class="label" x="0" y="20" font-size="16">LIVE ATTACKS</text>
+      <g transform="translate(0,32)" fill="#9ff1e0" font-size="12">
+        <text x="0" y="0">TIME &nbsp;&nbsp;&nbsp; ATTACKER &nbsp;&nbsp;&nbsp; ATTACK &nbsp;&nbsp;&nbsp; TARGET</text>
+        <text x="0" y="20">13:37:42 &nbsp; China Unicom HeBei &nbsp; Port Scan &nbsp; 104.18.29.77</text>
+        <text x="0" y="40">13:37:41 &nbsp; Orange Business Services &nbsp; DDoS Attack &nbsp; 172.217.14.206</text>
+      </g>
+    </g>
+
+    <!-- Rightmost: System status circle -->
+    <g transform="translate(1120,26)">
+      <text class="label" x="0" y="12" font-size="14">SYSTEM STATUS</text>
+      <!-- circular gauge -->
+      <g transform="translate(80,80)">
+        <circle r="48" fill="none" stroke="#003333" stroke-width="8" />
+        <circle r="48" fill="none" stroke="#35ff9a" stroke-width="8" stroke-dasharray="301" stroke-dashoffset="0" transform="rotate(-90)" style="filter:url(#glowSmall)" />
+        <text x="-20" y="6" font-size="18" fill="#9ff1e0">100%</text>
+        <text x="-15" y="26" font-size="10" fill="#8af7d8">SECURE</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- bottom advisory bar -->
+  <g transform="translate(0,736)">
+    <rect x="12" y="0" width="1341" height="20" rx="6" fill="#001d1d" opacity="0.6" />
+    <text x="24" y="15" fill="#ffd100" font-size="12">LATEST ALERT: Multiple DDoS attacks detected from 185.220.101.0/24</text>
+  </g>
+
+  <!-- corner small signature -->
+  <g transform="translate(20,734)" opacity="0.9">
+    <text x="0" y="12" fill="#00f7d9" font-size="12">Neon Cyber Map · improved by map.svg</text>
   </g>
 
 </svg>
