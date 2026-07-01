@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1365" height="768" viewBox="0 0 1365 768" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000004" />
+      <stop offset="100%" stop-color="#001218" />
+    </linearGradient>
+
+    <linearGradient id="landGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00ffd8" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#00b3ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="b" />
+      <feBlend in="SourceGraphic" in2="b" mode="screen" />
+    </filter>
+
+    <pattern id="grid" patternUnits="userSpaceOnUse" width="60" height="60">
+      <path d="M60 0 L0 0 0 60" fill="none" stroke="#002227" stroke-width="0.5" />
+    </pattern>
+
+    <g id="cityLights">
+      <circle cx="0" cy="0" r="1.8" fill="#fff" />
+      <circle cx="0" cy="0" r="4.6" fill="#00ffd8" opacity="0.06" />
+    </g>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGrad)" />
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.06" />
+
+  <!-- Soft vignette -->
+  <radialGradient id="vign" cx="50%" cy="35%" r="70%">
+    <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0.6"/>
+  </radialGradient>
+  <rect width="100%" height="100%" fill="url(#vign)" />
+
+  <!-- Stylized continents (abstract shapes for neon cyber look) -->
+  <g transform="translate(0,0)" filter="url(#glow)" opacity="0.98">
+    <path d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 180 420, 120 360 Z"
+          fill="url(#landGrad)" opacity="0.94" />
+
+    <path d="M60 520 C120 460, 200 440, 300 470 C420 510, 520 600, 640 620 C780 645, 920 620, 1040 560 C1160 500, 1250 420, 1300 360 C1330 320, 1280 260, 1240 240 C1180 210, 1060 200, 940 210 C820 220, 690 240, 560 240 C420 240, 320 280, 240 320 C160 360, 120 480, 60 520 Z"
+          fill="url(#landGrad)" opacity="0.85" transform="translate(0,10)" />
+
+    <!-- Smaller islands / clusters -->
+    <ellipse cx="980" cy="120" rx="65" ry="28" fill="url(#landGrad)" opacity="0.9" />
+    <ellipse cx="220" cy="100" rx="42" ry="18" fill="url(#landGrad)" opacity="0.88" />
+    <ellipse cx="1180" cy="420" rx="28" ry="12" fill="url(#landGrad)" opacity="0.9" />
+  </g>
+
+  <!-- Overlay soft stroke for depth -->
+  <g opacity="0.18" filter="url(#soft)">
+    <path d="M120 220 C200 140, 360 120, 480 180 C620 250, 700 360, 760 310 C840 250, 920 200, 1040 210 C1160 220, 1250 320, 1220 430 C1200 520, 1020 590, 860 600 C700 610, 540 580, 420 520 C300 460, 180 420, 120 360 Z"
+          fill="none" stroke="#00ffcc" stroke-width="1.4" />
+  </g>
+
+  <!-- City lights (randomized clusters placed to suggest density) -->
+  <g id="lights" opacity="0.98">
+    <!-- Europe-like cluster -->
+    <use href="#cityLights" x="820" y="230" />
+    <use href="#cityLights" x="840" y="250" />
+    <use href="#cityLights" x="860" y="230" />
+    <use href="#cityLights" x="900" y="260" />
+    <use href="#cityLights" x="920" y="240" />
+
+    <!-- East cluster -->
+    <use href="#cityLights" x="1150" y="300" />
+    <use href="#cityLights" x="1180" y="320" />
+    <use href="#cityLights" x="1100" y="280" />
+
+    <!-- Americas-like cluster -->
+    <use href="#cityLights" x="320" y="300" />
+    <use href="#cityLights" x="360" y="320" />
+    <use href="#cityLights" x="300" y="340" />
+    <use href="#cityLights" x="260" y="300" />
+
+    <!-- Oceania-ish -->
+    <use href="#cityLights" x="1040" y="120" />
+    <use href="#cityLights" x="1080" y="140" />
+  </g>
+
+  <!-- Subtle scanline overlay -->
+  <rect width="100%" height="100%" fill="none" />
+  <g opacity="0.03" fill="#00ffee">
+    <rect x="0" y="0" width="1365" height="2" />
+    <rect x="0" y="6" width="1365" height="1.2" />
+    <rect x="0" y="12" width="1365" height="1" />
+  </g>
+
+  <!-- Corner glow accent -->
+  <ellipse cx="120" cy="648" rx="340" ry="160" fill="#00ffd8" opacity="0.02" />
+
+  <!-- Small legend label -->
+  <g transform="translate(20,730)" opacity="0.9">
+    <rect x="-6" y="-18" width="220" height="28" rx="6" fill="#001a1a" opacity="0.6" />
+    <text x="0" y="0" fill="#00f7d9" font-family="Segoe UI, system-ui, Arial" font-size="14">Neon Cyber Map · map.svg</text>
+  </g>
+
+</svg>
